@@ -1,7 +1,6 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const auth = require('../middleware/auth');
 let User = require('../models/user.model');
 
 // @route   POST /users/register
@@ -9,63 +8,80 @@ let User = require('../models/user.model');
 // @access  Public
 router.post('/register', async (req, res) => {
     try {
-        let { username, password, passwordCheck } = req.body;
+        const { username, password } = req.body;
 
-        // Validation
-        if (!username || !password || !passwordCheck)
-            return res.status(400).json({ msg: "Not all fields have been entered." });
-        if (password.length < 5)
-            return res.status(400).json({ msg: "The password needs to be at least 5 characters long." });
-        if (password !== passwordCheck)
-            return res.status(400).json({ msg: "Enter the same password twice for verification." });
+        // --- NEW VALIDATION LOGIC ---
+        if (!username || !password) {
+            return res.status(400).json({ msg: 'Please enter all fields.' });
+        }
+
+        if (username.length < 5) {
+            return res.status(400).json({ msg: 'Username must be at least 5 characters long.' });
+        }
+
+        if (password.length < 5) {
+            return res.status(400).json({ msg: 'Password must be at least 5 characters long.' });
+        }
+
+        // Regex to check for at least one symbol
+        const symbolRegex = /[!@#$%^&*(),.?":{}|<>]/;
+        if (!symbolRegex.test(password)) {
+            return res.status(400).json({ msg: 'Password must contain at least one symbol.' });
+        }
+        // --- END OF NEW VALIDATION ---
+
 
         const existingUser = await User.findOne({ username: username });
-        if (existingUser)
-            return res.status(400).json({ msg: "An account with this username already exists." });
+        if (existingUser) {
+            return res.status(400).json({ msg: 'An account with this username already exists.' });
+        }
 
-        // Password Hashing
-        const salt = await bcrypt.genSalt();
-        const passwordHash = await bcrypt.hash(password, salt);
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
         const newUser = new User({
             username,
-            password: passwordHash
+            password: hashedPassword,
         });
+
         const savedUser = await newUser.save();
         res.json(savedUser);
+
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
 // @route   POST /users/login
-// @desc    Login a user
+// @desc    Login user
 // @access  Public
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
 
-        // Validation
-        if (!username || !password)
-            return res.status(400).json({ msg: "Not all fields have been entered." });
+        if (!username || !password) {
+            return res.status(400).json({ msg: 'Please enter all fields.' });
+        }
 
-        const user = await User.findOne({ username: username });
-        if (!user)
-            return res.status(400).json({ msg: "No account with this username has been registered." });
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(400).json({ msg: 'Invalid credentials.' });
+        }
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch)
-            return res.status(400).json({ msg: "Invalid credentials." });
+        if (!isMatch) {
+            return res.status(400).json({ msg: 'Invalid credentials.' });
+        }
 
-        // Create JWT
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         res.json({
             token,
             user: {
                 id: user._id,
-                username: user.username
-            }
+                username: user.username,
+            },
         });
+
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -73,7 +89,7 @@ router.post('/login', async (req, res) => {
 
 // @route   POST /users/tokenIsValid
 // @desc    Check if token is valid
-// @access  Public
+// @access  Private
 router.post('/tokenIsValid', async (req, res) => {
     try {
         const token = req.header('x-auth-token');
@@ -91,15 +107,6 @@ router.post('/tokenIsValid', async (req, res) => {
     }
 });
 
-// @route   GET /users/
-// @desc    Get user data
-// @access  Private
-router.get('/', auth, async (req, res) => {
-    const user = await User.findById(req.user);
-    res.json({
-        username: user.username,
-        id: user._id
-    });
-});
 
 module.exports = router;
+
