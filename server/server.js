@@ -9,7 +9,23 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+const allowedOrigins = [
+  'https://spend-wise-lac.vercel.app/login',
+  // You will add your Vercel frontend URL here later
+  // e.g., '[https://spendwise-frontend.vercel.app](https://spendwise-frontend.vercel.app)'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  }
+}));
 app.use(express.json()); // This allows the server to accept JSON in the body of requests
 
 // MongoDB Connection
