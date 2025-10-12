@@ -10,7 +10,7 @@ const port = process.env.PORT || 5000;
 
 // Middleware
 const allowedOrigins = [
-  'https://spend-wise-lac.vercel.app/login',
+  'https://spend-wise-lac.vercel.app/',
   // You will add your Vercel frontend URL here later
   // e.g., '[https://spendwise-frontend.vercel.app](https://spendwise-frontend.vercel.app)'
 ];
