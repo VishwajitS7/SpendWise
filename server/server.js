@@ -9,10 +9,11 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // Middleware
+// server/server.js
+
 const allowedOrigins = [
-  'https://spend-wise-lac.vercel.app/',
-  // You will add your Vercel frontend URL here later
-  // e.g., '[https://spendwise-frontend.vercel.app](https://spendwise-frontend.vercel.app)'
+  'http://localhost:3000',
+  'https://spend-wise-q55u9fzh3-vishwajits-projects-143cafb6.vercel.app/login' // <-- ADD YOUR LIVE URL HERE
 ];
 
 app.use(cors({
