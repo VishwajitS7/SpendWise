@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
 
 // Import Components
-import Navbar from './components/Navbar'; // <-- CORRECTED THIS LINE
+import Navbar from './components/Navbar';
 import Login from './components/Login';
 import Register from './components/Register';
 import ExpenseForm from './components/ExpenseForm';
@@ -18,6 +18,7 @@ function App() {
     });
     const [expenses, setExpenses] = useState([]);
     const [expenseToEdit, setExpenseToEdit] = useState(null);
+    const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
     useEffect(() => {
         const checkLoggedIn = async () => {
@@ -27,7 +28,6 @@ function App() {
                 token = '';
             }
             try {
-                const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
                 const tokenRes = await axios.post(`${apiUrl}/users/tokenIsValid`, null, { headers: { 'x-auth-token': token } });
                 if (tokenRes.data) {
                     const userRes = await axios.get(`${apiUrl}/users/`, {
@@ -43,7 +43,7 @@ function App() {
             }
         };
         checkLoggedIn();
-    }, []);
+    }, [apiUrl]);
 
     useEffect(() => {
         document.title = 'SpendWise';
@@ -52,11 +52,11 @@ function App() {
         } else {
             setExpenses([]);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userData]);
 
     const fetchExpenses = async () => {
         try {
-            const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
             const res = await axios.get(`${apiUrl}/expenses/`, {
                 headers: { 'x-auth-token': userData.token },
             });
@@ -73,7 +73,6 @@ function App() {
 
     const handleDeleteExpense = async (id) => {
         try {
-            const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
             await axios.delete(`${apiUrl}/expenses/${id}`, {
                 headers: { 'x-auth-token': userData.token },
             });
@@ -95,7 +94,6 @@ function App() {
         localStorage.setItem('auth-token', '');
     };
     
-    // --- STYLING ---
     const appStyle = {
         minHeight: '100vh',
         backgroundImage: `url('https://www.transparenttextures.com/patterns/cubes.png')`,
@@ -109,7 +107,6 @@ function App() {
         margin: '0 auto',
         padding: '2rem',
     };
-
 
     return (
         <BrowserRouter>

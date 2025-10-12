@@ -3,72 +3,78 @@ import axios from 'axios';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const Dashboard = ({ token }) => {
-    const [summaryData, setSummaryData] = useState([]);
+    const [summary, setSummary] = useState([]);
+    const [error, setError] = useState('');
+    const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
     useEffect(() => {
         const fetchSummary = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/expenses/summary', {
-                    headers: { 'x-auth-token': token }
+                const res = await axios.get(`${apiUrl}/expenses/summary`, {
+                    headers: { 'x-auth-token': token },
                 });
-                setSummaryData(res.data);
+                setSummary(res.data);
             } catch (err) {
-                console.error('Error fetching summary data:', err);
+                setError('Could not fetch summary data.');
             }
         };
+        fetchSummary();
+    }, [token, apiUrl]);
 
-        if (token) {
-            fetchSummary();
-        }
-    }, [token]);
+    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF'];
 
-    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF6361'];
-
-    const dashboardContainerStyle = {
-        padding: '2rem',
-        background: 'rgba(255, 255, 255, 0.8)',
-        borderRadius: '15px',
-        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.18)',
-        margin: '2rem auto',
-        maxWidth: '800px'
-    };
+    const chartData = summary.map(item => ({
+        name: item._id,
+        value: item.total,
+    }));
     
+    const pageStyle = {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '2rem',
+    };
+
+    const cardStyle = {
+        background: 'rgba(255, 255, 255, 0.2)',
+        backdropFilter: 'blur(10px)',
+        padding: '2.5rem',
+        borderRadius: '15px',
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        width: '100%',
+        maxWidth: '800px',
+        boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+        color: '#000'
+    };
+
     const titleStyle = {
         textAlign: 'center',
         marginBottom: '2rem',
-        color: '#333'
+        color: '#000',
+        fontSize: '2rem'
     };
-
+    
     return (
-        <div style={dashboardContainerStyle}>
-            <h2 style={titleStyle}>Spending by Category</h2>
-            {summaryData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={400}>
-                    <PieChart>
-                        <Pie
-                            data={summaryData}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            outerRadius={150}
-                            fill="#8884d8"
-                            dataKey="value"
-                            nameKey="name"
-                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        >
-                            {summaryData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                        </Pie>
-                        <Tooltip formatter={(value) => `₹${value.toFixed(2)}`} />
-                        <Legend />
-                    </PieChart>
-                </ResponsiveContainer>
-            ) : (
-                <p style={{ textAlign: 'center' }}>No expense data available to display a chart.</p>
-            )}
+        <div style={pageStyle}>
+            <div style={cardStyle}>
+                <h2 style={titleStyle}>Spending Summary</h2>
+                {error && <p style={{ color: 'red' }}>{error}</p>}
+                {summary.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={400}>
+                        <PieChart>
+                            <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={150} fill="#8884d8" label>
+                                {chartData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                            </Pie>
+                            <Tooltip formatter={(value) => `₹${value.toFixed(2)}`} />
+                            <Legend />
+                        </PieChart>
+                    </ResponsiveContainer>
+                ) : (
+                    <p style={{ textAlign: 'center' }}>No expense data available to display chart.</p>
+                )}
+            </div>
         </div>
     );
 };

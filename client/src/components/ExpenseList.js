@@ -3,43 +3,47 @@ import React from 'react';
 const ExpenseList = ({ expenses, onDelete, onEdit }) => {
 
     const listContainerStyle = {
-        padding: '2rem',
-        background: 'rgba(255, 255, 255, 0.8)',
-        borderRadius: '15px',
-        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+        padding: '1.5rem',
+        background: 'rgba(255, 255, 255, 0.2)',
         backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.18)',
-        margin: '2rem 0'
+        borderRadius: '15px',
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+        color: '#000',
     };
+
+    const titleStyle = {
+        textAlign: 'center',
+        marginBottom: '1.5rem',
+        fontSize: '1.8rem'
+    };
+    
     const tableStyle = {
         width: '100%',
         borderCollapse: 'collapse',
     };
+    
     const thTdStyle = {
-        borderBottom: '1px solid #ddd',
+        borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
         padding: '12px',
         textAlign: 'left',
-        color: '#333'
     };
+    
     const headerStyle = {
-        backgroundColor: 'rgba(255, 255, 255, 0.5)',
-        fontWeight: 'bold'
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
     };
-    const titleStyle = {
-        textAlign: 'center',
-        marginBottom: '1.5rem',
-        color: '#333'
-    };
+    
     const deleteButtonStyle = {
-        backgroundColor: '#dc3545',
+        backgroundColor: '#e74c3c',
         color: 'white',
         border: 'none',
         padding: '8px 12px',
         borderRadius: '5px',
         cursor: 'pointer',
     };
+    
     const editButtonStyle = {
-        backgroundColor: '#ffc107',
+        backgroundColor: '#f39c12',
         color: 'white',
         border: 'none',
         padding: '8px 12px',
@@ -49,7 +53,11 @@ const ExpenseList = ({ expenses, onDelete, onEdit }) => {
     };
 
     if (expenses.length === 0) {
-        return <p style={{ textAlign: 'center', marginTop: '2rem', color: '#555' }}>No expenses found. Add one to get started!</p>;
+        return (
+            <div style={listContainerStyle}>
+                <p style={{ textAlign: 'center' }}>No expenses found. Add one to get started!</p>
+            </div>
+        );
     }
 
     return (

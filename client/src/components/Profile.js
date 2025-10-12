@@ -8,13 +8,13 @@ const Profile = ({ userData }) => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
     useEffect(() => {
         const fetchProfileData = async () => {
             const token = localStorage.getItem('auth-token');
             if (token && userData) {
                 try {
-                    const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
                     const res = await axios.get(`${apiUrl}/users/`, {
                         headers: { 'x-auth-token': token },
                     });
@@ -25,7 +25,7 @@ const Profile = ({ userData }) => {
             }
         };
         fetchProfileData();
-    }, [userData]);
+    }, [userData, apiUrl]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -39,7 +39,6 @@ const Profile = ({ userData }) => {
 
         try {
             const token = localStorage.getItem('auth-token');
-            const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
             const res = await axios.post(`${apiUrl}/users/change-password`,
                 { currentPassword, newPassword },
                 { headers: { 'x-auth-token': token } }
@@ -165,3 +164,4 @@ const Profile = ({ userData }) => {
 };
 
 export default Profile;
+
