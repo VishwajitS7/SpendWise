@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const auth = require('../middleware/auth');
 let User = require('../models/user.model');
 
 // @route   POST /users/register
@@ -10,26 +11,20 @@ router.post('/register', async (req, res) => {
     try {
         const { username, password } = req.body;
 
-        // --- NEW VALIDATION LOGIC ---
+        // Validation
         if (!username || !password) {
             return res.status(400).json({ msg: 'Please enter all fields.' });
         }
-
         if (username.length < 5) {
             return res.status(400).json({ msg: 'Username must be at least 5 characters long.' });
         }
-
         if (password.length < 5) {
             return res.status(400).json({ msg: 'Password must be at least 5 characters long.' });
         }
-
-        // Regex to check for at least one symbol
         const symbolRegex = /[!@#$%^&*(),.?":{}|<>]/;
         if (!symbolRegex.test(password)) {
             return res.status(400).json({ msg: 'Password must contain at least one symbol.' });
         }
-        // --- END OF NEW VALIDATION ---
-
 
         const existingUser = await User.findOne({ username: username });
         if (existingUser) {
@@ -87,6 +82,59 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// @route   GET /users/
+// @desc    Get current user's data
+// @access  Private
+router.get('/', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user).select('-password');
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// @route   POST /users/change-password
+// @desc    Change user password
+// @access  Private
+router.post('/change-password', auth, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ msg: 'Please enter all fields.' });
+        }
+        if (newPassword.length < 5) {
+            return res.status(400).json({ msg: 'New password must be at least 5 characters long.' });
+        }
+        const symbolRegex = /[!@#$%^&*(),.?":{}|<>]/;
+        if (!symbolRegex.test(newPassword)) {
+            return res.status(400).json({ msg: 'New password must contain at least one symbol.' });
+        }
+
+        const user = await User.findById(req.user);
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ msg: 'Incorrect current password.' });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        user.password = hashedPassword;
+        await user.save();
+
+        res.json({ msg: 'Password changed successfully.' });
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // @route   POST /users/tokenIsValid
 // @desc    Check if token is valid
 // @access  Private
@@ -106,7 +154,6 @@ router.post('/tokenIsValid', async (req, res) => {
         res.json(false);
     }
 });
-
 
 module.exports = router;
 

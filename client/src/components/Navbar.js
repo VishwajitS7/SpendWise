@@ -1,77 +1,72 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
-const Navbar = ({ userData, setUserData }) => {
-    const navigate = useNavigate();
+const Navbar = ({ userData, logout }) => {
 
-    const handleLogout = () => {
-        setUserData({
-            token: undefined,
-            user: undefined
-        });
-        localStorage.setItem('auth-token', '');
-        navigate('/login');
-    };
-
-    // Styling
+    // --- STYLING ---
     const navStyle = {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: '1rem 2rem',
-        background: 'rgba(22, 22, 29, 0.9)', // Darker translucent background
+        background: 'rgba(40, 40, 70, 0.8)', // Darker translucent
         backdropFilter: 'blur(10px)',
         color: 'white',
-        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)'
+        borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
     };
+
     const titleStyle = {
-        fontSize: '1.5rem',
+        fontSize: '1.8rem',
         fontWeight: 'bold',
         textDecoration: 'none',
-        color: '#00d1b2' // Vibrant Teal color for the logo
+        color: '#61dafb', // Vibrant teal
     };
-    const navLinksStyle = {
+
+    const authLinksStyle = {
         display: 'flex',
         alignItems: 'center',
     };
+
     const linkStyle = {
         color: 'white',
         textDecoration: 'none',
         marginLeft: '1.5rem',
-        fontWeight: '500'
+        fontSize: '1rem',
     };
+
     const welcomeTextStyle = {
-        marginLeft: '1.5rem',
-        fontStyle: 'italic',
-        color: '#ccc'
+        color: '#eee',
+        marginRight: '1rem',
+        fontSize: '1rem'
     };
+
     const logoutButtonStyle = {
-        marginLeft: '1.5rem',
+        ...linkStyle,
+        background: '#e74c3c',
         padding: '0.5rem 1rem',
-        border: '1px solid #00d1b2',
         borderRadius: '5px',
-        background: 'transparent',
-        color: '#00d1b2',
-        cursor: 'pointer',
-        fontWeight: 'bold'
+        border: 'none',
+        cursor: 'pointer'
     };
+
 
     return (
         <nav style={navStyle}>
             <Link to="/" style={titleStyle}>SpendWise</Link>
-            <div style={navLinksStyle}>
+            <div>
                 {userData.user ? (
-                    <>
+                    <div style={authLinksStyle}>
+                        <span style={welcomeTextStyle}>Welcome, {userData.user.username}</span>
+                        <Link to="/profile" style={linkStyle}>Profile</Link>
                         <Link to="/dashboard" style={linkStyle}>Dashboard</Link>
                         <Link to="/" style={linkStyle}>Expenses</Link>
-                        <span style={welcomeTextStyle}>Welcome, {userData.user.username}</span>
-                        <button onClick={handleLogout} style={logoutButtonStyle}>Log Out</button>
-                    </>
+                        <button onClick={logout} style={logoutButtonStyle}>Log Out</button>
+                    </div>
                 ) : (
-                    <>
+                    <div style={authLinksStyle}>
                         <Link to="/login" style={linkStyle}>Login</Link>
                         <Link to="/register" style={linkStyle}>Register</Link>
-                    </>
+                    </div>
                 )}
             </div>
         </nav>

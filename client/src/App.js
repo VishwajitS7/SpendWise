@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
 
-// Components
-import Navbar from './components/Navbar';
+// Import Components
+import Navbar from './components/Navbar'; // <-- CORRECTED THIS LINE
 import Login from './components/Login';
 import Register from './components/Register';
 import ExpenseForm from './components/ExpenseForm';
 import ExpenseList from './components/ExpenseList';
-import Dashboard from './components/Dashboard'; // Import Dashboard
+import Dashboard from './components/Dashboard';
+import Profile from './components/Profile';
 
-const App = () => {
+function App() {
     const [userData, setUserData] = useState({
         token: undefined,
         user: undefined,
@@ -26,9 +27,10 @@ const App = () => {
                 token = '';
             }
             try {
-                const tokenRes = await axios.post('http://localhost:5000/users/tokenIsValid', null, { headers: { 'x-auth-token': token } });
+                const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
+                const tokenRes = await axios.post(`${apiUrl}/users/tokenIsValid`, null, { headers: { 'x-auth-token': token } });
                 if (tokenRes.data) {
-                    const userRes = await axios.get('http://localhost:5000/users/', {
+                    const userRes = await axios.get(`${apiUrl}/users/`, {
                         headers: { 'x-auth-token': token },
                     });
                     setUserData({
@@ -37,23 +39,25 @@ const App = () => {
                     });
                 }
             } catch (err) {
-                console.log("User not logged in or token invalid");
+                console.error("Login check failed", err);
             }
         };
         checkLoggedIn();
     }, []);
 
     useEffect(() => {
-        if (userData.token) {
+        document.title = 'SpendWise';
+        if (userData.user) {
             fetchExpenses();
         } else {
             setExpenses([]);
         }
-    }, [userData.token]);
+    }, [userData]);
 
     const fetchExpenses = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/expenses/', {
+            const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
+            const res = await axios.get(`${apiUrl}/expenses/`, {
                 headers: { 'x-auth-token': userData.token },
             });
             setExpenses(res.data);
@@ -69,7 +73,8 @@ const App = () => {
 
     const handleDeleteExpense = async (id) => {
         try {
-            await axios.delete(`http://localhost:5000/expenses/${id}`, {
+            const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
+            await axios.delete(`${apiUrl}/expenses/${id}`, {
                 headers: { 'x-auth-token': userData.token },
             });
             fetchExpenses();
@@ -81,68 +86,62 @@ const App = () => {
     const handleEditExpense = (expense) => {
         setExpenseToEdit(expense);
     };
+
+    const logout = () => {
+        setUserData({
+            token: undefined,
+            user: undefined,
+        });
+        localStorage.setItem('auth-token', '');
+    };
     
-    // Styling
+    // --- STYLING ---
     const appStyle = {
         minHeight: '100vh',
-        // New background image URL
-        backgroundImage: 'url(https://www.toptal.com/designers/subtlepatterns/uploads/double-bubble-outline.png)',
+        backgroundImage: `url('https://www.transparenttextures.com/patterns/cubes.png')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
     };
+
     const containerStyle = {
-        maxWidth: '960px',
+        maxWidth: '900px',
         margin: '0 auto',
-        padding: '0 1rem',
+        padding: '2rem',
     };
 
+
     return (
-        <Router>
+        <BrowserRouter>
             <div style={appStyle}>
-                <Navbar userData={userData} setUserData={setUserData} />
+                <Navbar userData={userData} logout={logout} />
                 <div style={containerStyle}>
                     <Routes>
-                        <Route path="/login" element={<Login setUserData={setUserData} />} />
-                        <Route path="/register" element={<Register />} />
-
-                        <Route 
-                            path="/dashboard" 
-                            element={
-                                userData.token ? 
-                                <Dashboard token={userData.token} /> : 
-                                <Navigate to="/login" />
-                            } 
-                        />
-
-                        <Route 
-                            path="/" 
-                            element={
-                                userData.token ? (
-                                    <>
-                                        <ExpenseForm 
-                                            onNewExpense={handleNewExpense} 
-                                            token={userData.token} 
-                                            expenseToEdit={expenseToEdit} 
-                                            setExpenseToEdit={setExpenseToEdit}
-                                        />
-                                        <ExpenseList 
-                                            expenses={expenses} 
-                                            onDelete={handleDeleteExpense} 
-                                            onEdit={handleEditExpense} 
-                                        />
-                                    </>
-                                ) : (
-                                    <Navigate to="/login" />
-                                )
-                            } 
-                        />
+                        {userData.user ? (
+                            <>
+                                <Route path="/" element={
+                                    <div>
+                                        <ExpenseForm onNewExpense={handleNewExpense} token={userData.token} expenseToEdit={expenseToEdit} />
+                                        <ExpenseList expenses={expenses} onDelete={handleDeleteExpense} onEdit={handleEditExpense} />
+                                    </div>
+                                } />
+                                <Route path="/dashboard" element={<Dashboard token={userData.token} />} />
+                                <Route path="/profile" element={<Profile userData={userData} />} />
+                                <Route path="*" element={<Navigate to="/" />} />
+                            </>
+                        ) : (
+                            <>
+                                <Route path="/login" element={<Login setUserData={setUserData} />} />
+                                <Route path="/register" element={<Register />} />
+                                <Route path="*" element={<Navigate to="/login" />} />
+                            </>
+                        )}
                     </Routes>
                 </div>
             </div>
-        </Router>
+        </BrowserRouter>
     );
-};
+}
 
 export default App;
 
