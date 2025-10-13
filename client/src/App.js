@@ -11,6 +11,8 @@ import ExpenseList from './components/ExpenseList';
 import Dashboard from './components/Dashboard';
 import Profile from './components/Profile';
 
+const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
 function App() {
     const [userData, setUserData] = useState({
         token: undefined,
@@ -18,9 +20,9 @@ function App() {
     });
     const [expenses, setExpenses] = useState([]);
     const [expenseToEdit, setExpenseToEdit] = useState(null);
-    const apiUrl = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
     useEffect(() => {
+        document.title = 'SpendWise';
         const checkLoggedIn = async () => {
             let token = localStorage.getItem('auth-token');
             if (token === null) {
@@ -43,16 +45,14 @@ function App() {
             }
         };
         checkLoggedIn();
-    }, [apiUrl]);
+    }, []);
 
     useEffect(() => {
-        document.title = 'SpendWise';
         if (userData.user) {
             fetchExpenses();
         } else {
             setExpenses([]);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userData]);
 
     const fetchExpenses = async () => {
@@ -107,6 +107,7 @@ function App() {
         margin: '0 auto',
         padding: '2rem',
     };
+
 
     return (
         <BrowserRouter>
