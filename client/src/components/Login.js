@@ -36,7 +36,7 @@ const Login = ({ setUserData }) => {
     };
 
     const formContainerStyle = {
-        background: 'rgba(200, 255, 255, 0.2)',
+        background: 'rgba(255, 255, 255, 0.2)',
         backdropFilter: 'blur(10px)',
         padding: '2.5rem',
         borderRadius: '15px',
